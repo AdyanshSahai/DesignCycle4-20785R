@@ -63,8 +63,8 @@ pros::Imu imu(21);
 pros::Optical optical_sensor(20);
 
 // scraper pneumatics
-pros::ADIDigitalOut scraper (H, 0);
-pros::ADIDigitalOut wing (B, 0);
+pros::ADIDigitalOut scraper ('H', 0);
+pros::ADIDigitalOut wing ('B', 0);
 
 // // tracking wheel
 // // vertical tracking wheel encoder. Rotation sensor, port 11, reversed
@@ -244,14 +244,17 @@ void opcontrol() {
         bool b = controller.get_digital(pros::E_CONTROLLER_DIGITAL_B);
         bool x = controller.get_digital(pros::E_CONTROLLER_DIGITAL_X);
 
+		bool wingState = wing.get_value();
+		bool scraperState = scraper.get_value();
+
 		// Example: Toggle scraper on B press (instead of hold)
     	if (pressed(b, prevB)) {
-        	scraper.set_value(!scraper.get_value());  // Toggle: if on, turn off; if off, turn on
+        	scraper.set_value(!scraperState);  // Toggle: if on, turn off; if off, turn on
     	}
 
     	// Example: Toggle wing on X press
     	if (pressed(x, prevX)) {
-        	wing.set_value(!wing.get_value());
+        	wing.set_value(!wingState);
     	}
 
 		//intake and hold
