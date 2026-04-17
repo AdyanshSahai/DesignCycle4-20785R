@@ -39,6 +39,9 @@ bool prevRight = false;
 bool prevB = false;
 bool prevX = false;
 
+bool scraperExtended = false;
+bool wingExtended = false;
+
 double posX;    
 double posY;
 double posTheta;
@@ -63,8 +66,8 @@ pros::Imu imu(21);
 pros::Optical optical_sensor(20);
 
 // scraper pneumatics
-pros::ADIDigitalOut scraper ('H', 0);
-pros::ADIDigitalOut wing ('B', 0);
+pros::adi::DigitalOut scraper('H', false);
+pros::adi::DigitalOut wing('B', false);
 
 // // tracking wheel
 // // vertical tracking wheel encoder. Rotation sensor, port 11, reversed
@@ -244,19 +247,6 @@ void opcontrol() {
         bool b = controller.get_digital(pros::E_CONTROLLER_DIGITAL_B);
         bool x = controller.get_digital(pros::E_CONTROLLER_DIGITAL_X);
 
-		bool wingState = wing.get_value();
-		bool scraperState = scraper.get_value();
-
-		// Example: Toggle scraper on B press (instead of hold)
-    	if (pressed(b, prevB)) {
-        	scraper.set_value(!scraperState);  // Toggle: if on, turn off; if off, turn on
-    	}
-
-    	// Example: Toggle wing on X press
-    	if (pressed(x, prevX)) {
-        	wing.set_value(!wingState);
-    	}
-
 		//intake and hold
 		if (L2==1){
 			bottomRoller.move(-127);
@@ -285,9 +275,15 @@ void opcontrol() {
             topRoller.brake();
         }
 
-
-
-
+        // scraper code for loading zone
+        if (pressed(b, prevB)) {
+            scraperExtended = !scraperExtended;
+            scraper.set_value(scraperExtended);
+        }
+        if (pressed(x, prevX)) {
+            wingExtended = !wingExtended;
+            wing.set_value(wingExtended);
+        }
 
         //pros::delay to save resources
         pros::delay(10);
