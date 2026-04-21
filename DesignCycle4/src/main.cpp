@@ -4,25 +4,27 @@
 /*
 Below are all of the ports on the brain:
 
-Left Drivetrain motors: 7, 6, 5
-Right Drive: 10, 9, 14
+Left Drivetrain motors: 2, 3, 4 
+Right Drive: 7, 8, 10
 
+Bottom rollers: 11
+Middle Roller: -13
+Top roller: -19
+Piston scraper: ?
 
-Bottom rollers: +3
-Middle roller: -
-Top roller: -
+Radio: 5
 
-Radio: 4
+Optical Sensor: 7
 
-Optical Sensor: 20
-
-Gyro: 21
-
-Wing: B
-Scraper: H
+Y axis encoder: 16
+Gyro: 15
 
 */
 
+
+int timeNew=0;
+int timeOld=0;
+int changeTime=0;
 
 int leftSpeed=0;
 int rightSpeed=0;
@@ -32,64 +34,56 @@ int topSpeed=0;
 int sortSpeed=0;
 int hue;
 
-bool prevUp = false;
-bool prevDown = false;
-bool prevLeft = false;
-bool prevRight = false;
-bool prevB = false;
-bool prevX = false;
-
-bool scraperExtended = false;
-bool wingExtended = false;
-
-double posX;    
-double posY;
-double posTheta;
-
+bool wingToggle = false;
+bool scraperToggle = false;
+bool wingLast = false;
+bool scraperLast = false;
 
 // controller
 pros::Controller controller(pros::E_CONTROLLER_MASTER);
 
 //roller motors
 pros::Motor bottomRoller(3);
-pros::Motor middleRoller(2);
-pros::Motor topRoller(6);
+pros::Motor topRoller(2);
 
 // motor groups
-pros::MotorGroup leftMotors({7, -14, -5}, pros::MotorGearset::blue); // left motor group - ports 2, 3, 4 (all reversed)
-pros::MotorGroup rightMotors({-10, 9, 8}, pros::MotorGearset::blue); // right motor group - ports 5, 7, 8 
+pros::MotorGroup leftMotors({10, 9, 8}, pros::MotorGearset::blue); // left motor group - ports 3 (reversed), 4, 5 (reversed)
+pros::MotorGroup rightMotors({-7, -6, -5}, pros::MotorGearset::blue); // right motor group - ports 6, 7, 9 (reversed)
 
-// Inertial Sensor on port 19
+// pneumatics
+pros::ADIDigitalOut wing('B', false);
+pros::ADIDigitalOut scraper('A', false);
+
+
+// Inertial Sensor on port 10
 pros::Imu imu(21);
 
-// Optical Sensor on port 20
-pros::Optical optical_sensor(20);
+//pros::Optical optical_sensor(7);
 
-// scraper pneumatics
-pros::adi::DigitalOut scraper('H', false);
-pros::adi::DigitalOut wing('B', false);
-
-// // tracking wheel
-// // vertical tracking wheel encoder. Rotation sensor, port 11, reversed
-// pros::Rotation verticalEnc(-17);
-// // vertical tracking wheel. 2.75" diameter, 2.5" offset, left of the robot (negative)
-// lemlib::TrackingWheel vertical(&verticalEnc, lemlib::Omniwheel::NEW_275, 6.88);	
+bool risingEdgeToggle(bool pressing, bool &lastState, bool &toggleState){
+    bool risingEdge = pressing && !lastState; // detect rising edge
+    if (risingEdge) {
+        toggleState = !toggleState; // toggle state on rising edge
+    }
+    lastState = pressing; // update last state
+    return toggleState;
+}
 
 // drivetrain settings
 lemlib::Drivetrain drivetrain(&leftMotors, // left motor group
                               &rightMotors, // right motor group
-                              13.75, // 10 inch track width
+                              10.6, // 10 inch track width
                               lemlib::Omniwheel::NEW_325, // using new 3.25" omnis
                               450, // drivetrain     rpm is 450
-                              6 // horizontal drift is 2 for drift drive. If we have traction wheels, it is 8.
+                              8 // horizontal drift is 2 for drift drive. If we have traction wheels, it is 8.
 );
 
 // lateral motion controller
-lemlib::ControllerSettings linearController(15, // proportional gain (kP) how fast it goes
+lemlib::ControllerSettings linearController(14, // proportional gain (kP) how fast it goes
                                             0, // integral gain (kI) static adjustment
-                                            2, // derivative gain (kD) easing
+                                            75, // derivative gain (kD) easing
                                             0, // anti windup
-                                            0, // small error range, in inches
+                                            0.1, // small error range, in inches
                                             0, // small error range timeout, in milliseconds
                                             0, // large error range, in inches
                                             0, // large error range timeout, in milliseconds
@@ -97,14 +91,14 @@ lemlib::ControllerSettings linearController(15, // proportional gain (kP) how fa
 );
 
 // angular motion controller
-lemlib::ControllerSettings angularController(2, // proportional gain (kP) speed
+lemlib::ControllerSettings angularController(6, // proportional gain (kP) speed
                                              0, // integral gain (kI) stitac  adjust
-                                             10, // derivative gain (kD) easing
+                                             50, // derivative gain (kD) easing
                                              0, // anti windup
-                                             0.5, // small error range, in degrees
-                                             100, // small error range timeout, in milliseconds
-                                             2, // large error range, in degrees
-                                             500, // large error range timeout, in milliseconds
+                                             0.05, // small error range, in degrees
+                                             0, // small error range timeout, in milliseconds
+                                             0, // large error range, in degrees
+                                             0, // large error range timeout, in milliseconds
                                              0 // maximum acceleration (slew)
 );
 
@@ -125,20 +119,11 @@ lemlib::ExpoDriveCurve throttleCurve(5, // joystick deadband out of 127
 // input curve for steer input during driver control
 lemlib::ExpoDriveCurve steerCurve(5, // joystick deadband out of 127
                                   10, // minimum output where drivetrain will move out of 127
-                                  1.04 // expo curve gain
+                                  1.05 // expo curve gain
 );
 
 // create the chassis
 lemlib::Chassis chassis(drivetrain, linearController, angularController, sensors, &throttleCurve, &steerCurve);
-
-bool pressed(bool current, bool &previous) {
-    if (current && !previous) {
-        previous = current;
-        return true;
-    }
-    previous = current;
-    return false;
-}
 
 
 /**
@@ -182,8 +167,6 @@ void initialize() {
             pros::delay(50);
         }
     });
-
-    
 }
 
 /**
@@ -196,34 +179,22 @@ void disabled() {}
  */
 void competition_initialize() {}
 
- 
+
+// get a path used for pure pursuit
+// this needs to be put outside a function
+//ASSET(path27pt1_txt); // '.' replaced with "_" to make c++ happy
+
 /**
  * Runs during auto
  *
  * This is an example autonomous routine which demonstrates a lot of the features LemLib has to offer
  */
-
-void autonomous() {
-    chassis.moveToPose(-0.68,-39.0,10.8, 4000, {.forwards=false});
-    chassis.waitUntilDone();
-
-    bottomRoller.move(-127);
-    middleRoller.move(-127);
-    topRoller.move(-127);
-    
-
-
-}
+void autonomous() {}
 
 /**
  * Runs in driver control
  */
 void opcontrol() {
-
-    
-
-
-
     // controller
     // loop to continuously update motors
     while (true) {
@@ -239,58 +210,76 @@ void opcontrol() {
 		bool R1 = controller.get_digital(pros::E_CONTROLLER_DIGITAL_R1);
 		bool R2 = controller.get_digital(pros::E_CONTROLLER_DIGITAL_R2);
 
-        bool up = controller.get_digital(pros::E_CONTROLLER_DIGITAL_UP);
-        bool down = controller.get_digital(pros::E_CONTROLLER_DIGITAL_DOWN);
-        bool right = controller.get_digital(pros::E_CONTROLLER_DIGITAL_RIGHT);
-        bool left = controller.get_digital(pros::E_CONTROLLER_DIGITAL_LEFT);
+        bool B = controller.get_digital(pros::E_CONTROLLER_DIGITAL_B);
+        bool Y = controller.get_digital(pros::E_CONTROLLER_DIGITAL_Y);
 
-        bool b = controller.get_digital(pros::E_CONTROLLER_DIGITAL_B);
-        bool x = controller.get_digital(pros::E_CONTROLLER_DIGITAL_X);
 
 		//intake and hold
 		if (L2==1){
-			bottomRoller.move(-127);
-            middleRoller.move(-127);
+			bottomRoller.move(127);
             topRoller.brake();
 		}else if (L1==1){
 			bottomRoller.move(127);
-            middleRoller.move(127);
             topRoller.move(127);
 
 		//bottom outtake
 		}else if (R2==1){
             bottomRoller.move(-127);
-            middleRoller.move(-127);
-            topRoller.brake();
+            topRoller.move(-127);
 		
 		// top outtake
         }else if (R1==1){
-            bottomRoller.move(-127);
-            middleRoller.move(-127);
-            topRoller.move(-127);
+            bottomRoller.move(127);
+            topRoller.move(127);
 
+		// or brake.
         }else{
             bottomRoller.brake();
-            middleRoller.brake();
             topRoller.brake();
         }
 
-        // scraper code for loading zone
-        if (pressed(b, prevB)) {
-            scraperExtended = !scraperExtended;
-            scraper.set_value(scraperExtended);
-        }
-        if (pressed(x, prevX)) {
-            wingExtended = !wingExtended;
-            wing.set_value(wingExtended);
-        }
+        //wing toggle
+        risingEdgeToggle(Y, wingLast, wingToggle);
+        wing.set_value(wingToggle); 
+        //scraper toggle
+        risingEdgeToggle(B, scraperLast, scraperToggle);
+        scraper.set_value(scraperToggle);
 
-        //pros::delay to save resources
+
+
+        //Rerun
+
+
+		// leftSpeed = leftMotors.get_actual_velocity();
+		// rightSpeed = rightMotors.get_actual_velocity();
+		// bottomSpeed = bottomRoller.get_actual_velocity();
+		// middleSpeed = middleRoller.get_actual_velocity();
+		// topSpeed = topRoller.get_actual_velocity();
+
+		// FILE* usd_file_write = fopen("/usd/rerun.txt", "a");
+		// fprintf(usd_file_write, "leftMotors.move_velocity(%i); \n", leftSpeed);
+		// fprintf(usd_file_write, "rightMotors.move_velocity(%i); \n", rightSpeed);
+		// fprintf(usd_file_write, "bottomRoller.move_velocity(%i); \n", bottomSpeed);
+		// fprintf(usd_file_write, "middleRoller.move_velocity(%i); \n", middleSpeed);
+		// fprintf(usd_file_write, "topRoller.move_velocity(%i); \n", topSpeed);
+
+		// timeNew = pros::millis();
+		// changeTime = timeNew - timeOld;
+		// timeOld = pros::millis();
+
+
+
+		// fprintf(usd_file_write, "pros::delay(%d); \n", changeTime);
+
+		// fclose(usd_file_write);
+
+        // end the thing
+
+
+        // pros::delay to save resources
         pros::delay(10);
 
 		
     }
 }
-
-
 
