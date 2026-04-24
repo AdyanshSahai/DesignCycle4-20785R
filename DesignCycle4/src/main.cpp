@@ -139,7 +139,7 @@ void initialize() {
 
     chassis.calibrate(); // calibrate sensors
 
-    optical_sensor.set_led_pwm(100);
+    //optical_sensor.set_led_pwm(100);
 
     // the default rate is 50. however, if you need to change the rate, you
     // can do the following.
