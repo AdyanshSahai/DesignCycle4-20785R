@@ -260,12 +260,6 @@ void opcontrol() {
         if (pressed(b, prevB)) {
             scraperState = !scraperState;
             scraper.set_value(scraperState);    // toggle scraper
-            FILE* f = fopen("/usd/replay.txt", "a");
-            if (f) {
-                fprintf(f, "SCRAPER_TOGGLE\n"); // scraper token
-                fclose(f);
-                pros::lcd::print(6, "Saved Scraper");
-            } else { pros::lcd::print(6, "USD WRITE FAILED"); }
         }
 
 
@@ -275,61 +269,6 @@ void opcontrol() {
         if (pressed(y, prevY)) {
             wingState = !wingState;
             wing.set_value(wingState);          // toggle wing
-            FILE* f = fopen("/usd/replay.txt", "a");
-            if (f) {
-                fprintf(f, "WING_TOGGLE\n");    // wing token
-                fclose(f);
-                pros::lcd::print(6, "Saved Wing");
-            } else { pros::lcd::print(6, "USD WRITE FAILED"); }
-        }
-
-
-        // ---- POSE SNAPSHOT ----
-        // grab pose once so all the recording blocks below see the same values
-        lemlib::Pose pose = chassis.getPose(); // read pose
-        posX     = pose.x;      // store x
-        posY     = pose.y;      // store y
-        posTheta = pose.theta;  // store heading
-
-        bottomSpeed = bottomRoller.get_actual_velocity(); // bottom rpm
-        topSpeed    = topRoller.get_actual_velocity();    // top rpm
-
-
-        // ---- RECORDING ----
-        // d-pad writes tokenized commands to the SD card for replay in auto.
-        // UP = forward moveToPose, DOWN = backward, LEFT = turn, RIGHT = intake state.
-        // scraper on/off go in a separate chain so they don't block the d-pad.
-        if (pressed(up, prevUp)) {
-            FILE* f = fopen("/usd/replay.txt", "a");
-            if (f) {
-                fprintf(f, "MOVE_POSE_FWD %.2f %.2f %.2f\n", posX, posY, posTheta); // forward token
-                fclose(f);
-                pros::lcd::print(6, "Saved FWD");
-            } else { pros::lcd::print(6, "USD WRITE FAILED"); }
-
-        } else if (pressed(down, prevDown)) {
-            FILE* f = fopen("/usd/replay.txt", "a");
-            if (f) {
-                fprintf(f, "MOVE_POSE_BWD %.2f %.2f %.2f\n", posX, posY, posTheta); // backward token
-                fclose(f);
-                pros::lcd::print(6, "Saved BWD");
-            } else { pros::lcd::print(6, "USD WRITE FAILED"); }
-
-        } else if (pressed(left, prevLeft)) {
-            FILE* f = fopen("/usd/replay.txt", "a");
-            if (f) {
-                fprintf(f, "TURN_TO %.2f\n", posTheta);  // turn token
-                fclose(f);
-                pros::lcd::print(6, "Saved Turn");
-            } else { pros::lcd::print(6, "USD WRITE FAILED"); }
-
-        } else if (pressed(right, prevRight)) {
-            FILE* f = fopen("/usd/replay.txt", "a");
-            if (f) {
-                fprintf(f, "INTAKE_STATE %d %d %d %d\n", (int)L1, (int)L2, (int)R1, (int)R2); // intake token
-                fclose(f);
-                pros::lcd::print(6, "Saved Intake");
-            } else { pros::lcd::print(6, "USD WRITE FAILED"); }
         }
 
 
