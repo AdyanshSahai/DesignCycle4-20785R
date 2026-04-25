@@ -1,7 +1,7 @@
 {
   "py/object": "pros.conductor.project.Project",
   "py/state": {
-    "project_name": "Replay",
+    "project_name": "Snapshot-Replay",
     "target": "v5",
     "templates": {
       "LemLib": {
@@ -635,7 +635,8 @@
       }
     },
     "upload_options": {
-      "description": "Runs the autonomous"
+      "description": "Runs the autonomous",
+      "slot": 2
     },
     "use_early_access": false
   }
