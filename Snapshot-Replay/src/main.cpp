@@ -55,15 +55,17 @@ pros::adi::DigitalOut wing('A', false);    // wing port A
 bool wingState = false;  // track state
 bool scraperState = false; // track state
 
-pros::Rotation verticalEnc(-17);                                                   // encoder port 17
-lemlib::TrackingWheel vertical(&verticalEnc, lemlib::Omniwheel::NEW_275, 6.88);   // 2.75" wheel
+// IME tracking wheels built from the drivetrain motor groups.
+// distance is half the track width (5.4"), negative for left, positive for right.
+lemlib::TrackingWheel leftIME(&leftMotors,   lemlib::Omniwheel::NEW_325, -5.4, 450); // left IME
+lemlib::TrackingWheel rightIME(&rightMotors, lemlib::Omniwheel::NEW_325,  5.4, 450); // right IME
 
 
 // ---- LEMLIB SETUP ----
 
 lemlib::Drivetrain drivetrain(&leftMotors,             // left motor group
                               &rightMotors,            // right motor group
-                              13.75,                   // 10 inch track width
+                              10.8,                    // track width
                               lemlib::Omniwheel::NEW_325, // new 3.25" omnis
                               450,                     // drivetrain rpm
                               6                        // horizontal drift
@@ -91,11 +93,11 @@ lemlib::ControllerSettings angularController(2,    // kP
                                              0     // slew
 );
 
-lemlib::OdomSensors sensors(nullptr,  // vertical tracking wheel 1
-                            nullptr,  // vertical tracking wheel 2
-                            nullptr,  // horizontal tracking wheel
-                            nullptr,  // horizontal tracking wheel 2
-                            &imu      // inertial sensor
+lemlib::OdomSensors sensors(&leftIME,  // vertical tracking wheel 1 (left IME)
+                            &rightIME, // vertical tracking wheel 2 (right IME)
+                            nullptr,   // horizontal tracking wheel
+                            nullptr,   // horizontal tracking wheel 2
+                            &imu       // inertial sensor
 );
 
 lemlib::ExpoDriveCurve throttleCurve(5, 10, 1.04); // throttle curve
