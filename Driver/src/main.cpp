@@ -241,8 +241,8 @@ void opcontrol() {
             bottomRoller.move(-127);  // outtake bottom
             topRoller.brake();        // hold top
         } else if (L1) {
-            bottomRoller.move(-100);   // intake bottom
-            topRoller.move(83);      // intake top
+            bottomRoller.move(-70);   // intake bottom
+            topRoller.move(90);      // intake top
         } else if (R2) {
             bottomRoller.move(127);   // intake bottom
             topRoller.move(127);      // intake top
