@@ -188,6 +188,7 @@ void initialize() {
     });
 }
 
+// ---- DISABLED / COMPETITION INIT ----
 void disabled() {}
 void competition_initialize() {}
 
