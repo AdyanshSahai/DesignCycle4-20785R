@@ -44,7 +44,7 @@ pros::Motor bottomRoller(-3);    // port 13
 pros::Motor topRoller(-2);      // port 16 rev
 
 pros::MotorGroup leftMotors({10, 9, 8}, pros::MotorGearset::blue);  // left side
-pros::MotorGroup rightMotors({-7, -6, -5},    pros::MotorGearset::blue);  // right side
+pros::MotorGroup rightMotors({-7, -21, -5},    pros::MotorGearset::blue);  // right side
 
 pros::Imu     imu(19);            // IMU port 19
 pros::Optical optical_sensor(20); // optical port 20
