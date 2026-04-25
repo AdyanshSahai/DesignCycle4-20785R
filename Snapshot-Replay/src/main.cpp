@@ -41,7 +41,7 @@ int topSpeed    = 0;
 pros::Controller controller(pros::E_CONTROLLER_MASTER);  // master controller
 
 pros::Motor bottomRoller(-3);    // port 13
-pros::Motor topRoller(-2);      // port 16 rev
+pros::Motor topRoller(-2);      // port 16 reversed
 
 pros::MotorGroup leftMotors({10, 9, 8}, pros::MotorGearset::blue);  // left side
 pros::MotorGroup rightMotors({-7, -6, -5},    pros::MotorGearset::blue);  // right side
