@@ -174,6 +174,7 @@ void initialize() {
 
     topRoller.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);  // hold top
     chassis.calibrate();                                  // calibrate IMU
+    chassis.setPose(0, 0, 0);                             // zero position
     optical_sensor.set_led_pwm(100);                      // full brightness
 
     pros::Task screenTask([&]() {
