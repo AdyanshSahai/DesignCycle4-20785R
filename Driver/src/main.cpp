@@ -192,22 +192,7 @@ void disabled() {}
 void competition_initialize() {}
 
 
-void autonomous() {
-    // ---- REPLAY ----
-    // open the token file that was built during driver control and run each
-    // line through execute_command. if the file isn't there, nothing happens.
-    FILE* f = fopen("/usd/replay.txt", "r"); // open replay
-    if (f) {
-        pros::lcd::print(0, "Replaying...");    // show status
-        char line[256];                         // line buffer
-        while (fgets(line, sizeof(line), f) != NULL) {
-            execute_command(line);              // run command
-        }
-        fclose(f);                              // close file
-        pros::delay(1000);                      // brief settle
-        pros::lcd::print(0, "Replay Done");     // done message
-    }
-}
+void autonomous() {}
 
 
 void opcontrol() {
