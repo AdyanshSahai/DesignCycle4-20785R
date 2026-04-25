@@ -172,23 +172,6 @@ void execute_command(char* line) {
 void initialize() {
     pros::lcd::initialize();                              // init screen
 
-    // ---- ARCHIVE + CLEAR REPLAY ----
-    // on every power-on, back up the previous session's replay file so it
-    // isn't overwritten by new recordings during this run.
-    FILE* src = fopen("/usd/replay.txt", "r");           // open old replay
-    FILE* dst = fopen("/usd/replay-archive.txt", "w");   // overwrite archive
-    if (src && dst) {
-        char buf[256];                                    // copy buffer
-        while (fgets(buf, sizeof(buf), src) != NULL) {
-            fputs(buf, dst);                              // write line
-        }
-    }
-    if (src) fclose(src);                                // close source
-    if (dst) fclose(dst);                                // close archive
-
-    FILE* clr = fopen("/usd/replay.txt", "w");           // truncate replay
-    if (clr) fclose(clr);                                // close immediately
-
     topRoller.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);  // hold top
     chassis.calibrate();                                  // calibrate IMU
     optical_sensor.set_led_pwm(100);                      // full brightness
@@ -230,6 +213,24 @@ void autonomous() {
 
 
 void opcontrol() {
+
+    // ---- ARCHIVE + CLEAR REPLAY ----
+    // back up whatever was recorded last run before we start writing new stuff.
+    // only runs at the top of driver control, so autonomous replay is untouched.
+    FILE* src = fopen("/usd/replay.txt", "r");           // open old replay
+    FILE* dst = fopen("/usd/replay-archive.txt", "w");   // overwrite archive
+    if (src && dst) {
+        char buf[256];                                    // copy buffer
+        while (fgets(buf, sizeof(buf), src) != NULL) {
+            fputs(buf, dst);                              // write line
+        }
+    }
+    if (src) fclose(src);                                // close source
+    if (dst) fclose(dst);                                // close archive
+
+    FILE* clr = fopen("/usd/replay.txt", "w");           // truncate replay
+    if (clr) fclose(clr);                                // done
+
     while (true) {
 
         // ---- DRIVE ----
