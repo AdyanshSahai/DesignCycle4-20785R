@@ -259,7 +259,6 @@ void opcontrol() {
             scraper.set_value(scraperState);    // toggle scraper
         }
 
-
         // ---- WING ----
         // Y flips the wing each press. toggle and record both happen here so
         // pressed() is only called once — calling it twice would miss the record.
