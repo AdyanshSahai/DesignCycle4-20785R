@@ -192,7 +192,10 @@ void disabled() {}
 void competition_initialize() {}
 
 
-void autonomous() {}
+void autonomous() {
+
+    chassis.moveToPoint(0, 10, 2000);
+}
 
 
 void opcontrol() {
