@@ -54,6 +54,7 @@ pros::adi::DigitalOut wing('A', false);    // wing port A
 
 bool wingState = false;  // track state
 bool scraperState = false; // track state
+bool brakeIsCoast = false; // false = BRAKE, true = COAST
 
 pros::Rotation verticalEnc(-17);                                                   // encoder port 17
 lemlib::TrackingWheel vertical(&verticalEnc, lemlib::Omniwheel::NEW_275, 6.88);   // 2.75" wheel
@@ -240,6 +241,14 @@ void opcontrol() {
         } else {
             bottomRoller.brake();     // stop bottom
             topRoller.brake();        // stop top
+        }
+
+
+        // ---- BRAKE MODE ----
+        // DOWN toggles drivetrain between BRAKE and COAST
+        if (pressed(down, prevDown)) {
+            brakeIsCoast = !brakeIsCoast;
+            chassis.setBrakeMode(brakeIsCoast ? pros::E_MOTOR_BRAKE_COAST : pros::E_MOTOR_BRAKE_BRAKE);
         }
 
 
